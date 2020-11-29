@@ -144,6 +144,8 @@ class AgentState:
         else:
             return "Ghost: " + str(self.configuration)
 
+    __repr__ = __str__
+
     def __eq__(self, other):
         if other == None:
             return False
