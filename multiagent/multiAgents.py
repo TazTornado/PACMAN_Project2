@@ -77,14 +77,14 @@ class ReflexAgent(Agent):
 
         initialScore = successorGameState.getScore()
         foodDists = []
-        coefficient1 = 0
+        coefficient = 0
         for foodot in newFood.asList():
             foodDists.append(manhattanDistance(newPos, foodot))
 
         if len(foodDists) != 0:
-            coefficient1 = 1/min(foodDists)
+            coefficient = 1/min(foodDists)
                 
-        return initialScore + coefficient1
+        return initialScore + coefficient
 
 def scoreEvaluationFunction(currentGameState):
     """
@@ -145,6 +145,20 @@ class MinimaxAgent(MultiAgentSearchAgent):
         Returns whether or not the game state is a losing state
         """
         "*** YOUR CODE HERE ***"
+
+        # base case: have we reached the max depth?
+        if self.depth == 0 or gameState.isLose() or gameState.isWin():
+            return self.evaluationFunction(gameState)
+
+        # prepare for next level of recursive execution
+        # TODO: increment numAgents (?)
+        # TODO: increment depth for sure
+
+
+        legalMoves = gameState.getLegalActions()
+        scores = [self.evaluationFunction(gameState, action) for action in legalMoves]
+        bestScore = max(scores)
+
         util.raiseNotDefined()
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
