@@ -146,18 +146,64 @@ class MinimaxAgent(MultiAgentSearchAgent):
         """
         "*** YOUR CODE HERE ***"
 
-        # base case: have we reached the max depth?
-        if self.depth == 0 or gameState.isLose() or gameState.isWin():
-            return self.evaluationFunction(gameState)
+        #################### serious coding here ####################
+    
+        def MiniMax(gameState, depth, agentIndex):
+            """
+            Helper recursive function that executes the actual Minimax algorithm
+            """
 
-        # prepare for next level of recursive execution
-        # TODO: increment numAgents (?)
-        # TODO: increment depth for sure
+            # base case: max depth or terminal state => return the score
+            if depth == self.depth or gameState.isLose() or gameState.isWin():
+                return self.evaluationFunction(gameState)
 
+            legalMoves = gameState.getLegalActions(agentIndex)
+            newDepth = depth            # depth value for next rec. call; may remain the same
+            utilities = []
 
-        legalMoves = gameState.getLegalActions()
-        scores = [self.evaluationFunction(gameState, action) for action in legalMoves]
-        bestScore = max(scores)
+            # PACMAN AGENT => MAX_VALUE ALGORITHM
+            if agentIndex == self.index:    
+                # gather a list of successor states that correspond to the legal moves
+                successorGameStates = [gameState.generateSuccessor(agentIndex, action) for action in legalMoves]
+                newIndex = agentIndex + 1   # prepare for next agent, i.e a ghost
+
+                for newState in successorGameStates:
+                    utilities.append(MiniMax(newState, newDepth, newIndex))    # recursive call for next agent
+
+                return max(utilities)
+            
+            # PACMAN AGENT => MAX_VALUE ALGORITHM
+            else:       # ghost agent => execute min
+                newIndex = (agentIndex + 1) % gameState.getNumAgents()      # loop around the available agent indices
+                if newIndex == self.index:      # if this is the last ghost
+                    newDepth = depth + 1        # then go 1 level deeper
+
+                # gather a list of successor states that correspond to the legal moves
+                successorGameStates = [gameState.generateSuccessor(agentIndex, action) for action in legalMoves]
+                
+                for newState in successorGameStates:
+                    utilities.append(MiniMax(newState, newDepth, newIndex))    # recursive call for next agent
+                
+                return min(utilities)
+
+#####################################################################################
+        # perform the root's algorithm (pacman), for depth == 0 => root     #
+        # the root executes pretty much the same algorithm as the MiniMax   #
+        # function. The difference is that root has to choose  and return   #
+        # the _action_ that corresponds to the max score returned, whereas  #
+        # Minimax() only returns scores.                                    #
+        #####################################################################
+
+        utilities = []
+        legalMoves = gameState.getLegalActions(self.index)
+        for move in legalMoves:
+            possibleState = gameState.generateSuccessor(self.index, move)
+
+            # begin recursive execution, starting from ghosts at depth 0
+            utilities.append((move, MiniMax(possibleState, 0, self.index + 1))) 
+
+        chosenPair = max(utilities, key = lambda item: item[1] )    # get the (move, value) pair with max value
+        return chosenPair[0]
 
         util.raiseNotDefined()
 
