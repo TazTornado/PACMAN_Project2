@@ -306,6 +306,78 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
 		legal moves.
 		"""
 		"*** YOUR CODE HERE ***"
+
+		def ExpectiMax(gameState, depth, agentIndex):
+			"""
+				Helper recursive function that executes the actual Minimax algorithm
+			"""
+
+			# base case: max depth or terminal state => return the score
+			if depth == self.depth or gameState.isLose() or gameState.isWin():
+				return self.evaluationFunction(gameState)
+
+			legalMoves = gameState.getLegalActions(agentIndex)
+			newDepth = depth            # depth value for next rec. call; may remain the same
+			utilities = []
+
+			# PACMAN AGENT => MAX_VALUE ALGORITHM
+			if agentIndex == self.index:    
+				# gather a list of successor states that correspond to the legal moves
+				successorGameStates = [gameState.generateSuccessor(agentIndex, action) for action in legalMoves]
+				newIndex = agentIndex + 1   # prepare for next agent, i.e a ghost
+
+				for newState in successorGameStates:
+					utilities.append(ExpectiMax(newState, newDepth, newIndex))    # recursive call for next agent
+
+				return max(utilities)
+			
+			# GHOST AGENT => MIN_VALUE ALGORITHM
+			else:       # ghost agent => execute min
+
+				#################################################################
+				# It's assumed that ghost agents choose randomly(not optimally) #
+				# one of their legal actions. Therefore each action's score 	#
+				# will be multiplied by the probability of being chosen.		#
+				# Uniform distribution => equal probability. Now each score		#
+				# will actually be an aliquot part of the final score			#
+				#################################################################
+				pr = 1 / len(legalMoves)
+
+				newIndex = (agentIndex + 1) % gameState.getNumAgents()      # loop around the available agent indices
+				if newIndex == self.index:      # if this is the last ghost
+					newDepth = depth + 1        # then go 1 level deeper
+
+				# gather a list of successor states that correspond to the legal moves
+				successorGameStates = [gameState.generateSuccessor(agentIndex, action) for action in legalMoves]
+				
+				for newState in successorGameStates:
+					utilities.append(pr * ExpectiMax(newState, newDepth, newIndex))    # recursive call for next agent
+				
+				# calculate the score by adding up all the 
+				return sum(utilities)
+
+################################################################################################################
+		"""
+			Perform the root's algorithm (pacman), for depth == 0 => root.    
+			The root executes pretty much the same algorithm as the MiniMax  
+			function. The difference is that root has to choose and return  
+			the _action_ that corresponds to the max score returned, whereas 
+			Minimax() only returns scores.
+		"""                                   
+
+		utilities = []
+		legalMoves = gameState.getLegalActions(self.index)
+		
+		for move in legalMoves:
+			possibleState = gameState.generateSuccessor(self.index, move)
+
+			# begin recursive execution, starting from ghosts at depth 0
+			utilities.append((move, ExpectiMax(possibleState, 0, self.index + 1))) 
+
+		chosenPair = max(utilities, key = lambda item: item[1] )    # get the (move, value) pair with max value
+		return chosenPair[0]
+
+
 		util.raiseNotDefined()
 
 def betterEvaluationFunction(currentGameState):
@@ -316,6 +388,28 @@ def betterEvaluationFunction(currentGameState):
 	DESCRIPTION: <write something here so we know what you did>
 	"""
 	"*** YOUR CODE HERE ***"
+
+	# actionScores = []
+	# for action in currentGameState.getLegalActions():
+	# 	successorGameState = currentGameState.generatePacmanSuccessor(action)
+	# 	newPos = successorGameState.getPacmanPosition()
+	# 	newFood = successorGameState.getFood()
+	# 	initialScore = successorGameState.getScore()
+	# 	foodDists = []
+	# 	coefficient = 0
+	# 	for foodot in newFood.asList():
+	# 		foodDists.append(manhattanDistance(newPos, foodot))
+
+	# 	if len(foodDists) != 0:
+	# 		coefficient = 1/min(foodDists)
+
+	# 	actionScores.append(initialScore + coefficient)
+
+	# if actionScores:			
+	# 	return max(actionScores)
+	# else:
+	# 	return 0
+
 	util.raiseNotDefined()
 
 # Abbreviation
