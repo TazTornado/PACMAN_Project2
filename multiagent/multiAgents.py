@@ -309,7 +309,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
 
 		def ExpectiMax(gameState, depth, agentIndex):
 			"""
-				Helper recursive function that executes the actual Minimax algorithm
+				Helper recursive function that executes the actual Expectimax algorithm
 			"""
 
 			# base case: max depth or terminal state => return the score
@@ -385,41 +385,67 @@ def betterEvaluationFunction(currentGameState):
 	Your extreme ghost-hunting, pellet-nabbing, food-gobbling, unstoppable
 	evaluation function (question 5).
 
-	DESCRIPTION: <write something here so we know what you did>
+	DESCRIPTION: 
+	
+	The evaluation starts with the current gameState's score.
+	If there are any legal moves for Pacman, then their corresponding states are generated. 
+	For each of those new states, the function enhances its score using 3 factors:
+	1. distance to closest food dot (if any)
+	2. distance to closest poer capsule (if any)
+	3. distance to closest ghost
+	Factors 1 and 2 increase the score by their reverse value, whereas factor 3 decreases the score by its reverse.
+
+	The chosen score is the highest among the above.
 	"""
 	"*** YOUR CODE HERE ***"
 
-	actionScores = []
-	currentPos = currentGameState.getPacmanPosition()
 	legalMoves = currentGameState.getLegalActions()
-	
-	for action in legalMoves:
-		successorGameState = currentGameState.generatePacmanSuccessor(action)
-		newPos = successorGameState.getPacmanPosition()
-		ghostsPos = successorGameState.getGhostPositions()
-		newFood = successorGameState.getFood()
-		initialScore = successorGameState.getScore()
+	successorGameStates = [currentGameState.generatePacmanSuccessor(action) for action in legalMoves]
+	currentPos = currentGameState.getPacmanPosition()
 
-		foodDists = []; ghostDists = []
-		coefficient1 = 0; coefficient2 = 0
+	actionScores = []
+	initialScore = currentGameState.getScore()
 
-		for foodot in newFood.asList():							
+	for newState in successorGameStates:
+		
+		# extract all necessary info from the -possible- new game state #
+		# ------------------------------------------------------------- #
+		newPos = newState.getPacmanPosition()
+		ghostsPos = newState.getGhostPositions()
+		newFood = newState.getFood()
+		initialScore = newState.getScore()
+		capsulesLeft = newState.getCapsules()
+
+		# calculate the factors that affect the score #
+		# ------------------------------------------- #
+		foodDists = []; ghostDists = []; capsuleDists = []		# distances from which the minimum is chosen
+		foodFactor = 0; ghostFactor = 0; capsuleFactor = 0		# initialize factors
+
+
+		for foodot in newFood.asList():							# food factor	
 			foodDists.append(manhattanDistance(newPos, foodot))
 		if len(foodDists) != 0:
-			coefficient1 = 1/min(foodDists)
+			foodFactor = 1/min(foodDists)
 
 		for ghost in ghostsPos:
-			ghostDists.append(manhattanDistance(newPos, ghost))
-		if (len(ghostDists) != 0) and (max(ghostDists) != 0):
-			coefficient2 = 1/max(ghostDists)
+			ghostDists.append(manhattanDistance(newPos, ghost))	# ghost factor
+		if (len(ghostDists) != 0) and (min(ghostDists) != 0):
+			ghostFactor = 1/min(ghostDists)
 
-		
-		actionScores.append(initialScore + coefficient1 - coefficient2)
+		for capsule in capsulesLeft:							# capsule factor
+			capsuleDists.append(manhattanDistance(newPos, capsule))
+		if len(capsuleDists) != 0:
+			capsuleFactor = 1/min(capsuleDists)
 
+		# evaluate the new state
+		actionScores.append(initialScore + foodFactor + capsuleFactor - ghostFactor)
+
+
+	# if there are no legal actions to evaluate, return currentGameState's score # 
 	if actionScores:			
 		return max(actionScores)
 	else:
-		return currentGameState.getScore()
+		return initialScore
 
 	util.raiseNotDefined()
 
