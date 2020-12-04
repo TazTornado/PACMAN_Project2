@@ -389,26 +389,37 @@ def betterEvaluationFunction(currentGameState):
 	"""
 	"*** YOUR CODE HERE ***"
 
-	# actionScores = []
-	# for action in currentGameState.getLegalActions():
-	# 	successorGameState = currentGameState.generatePacmanSuccessor(action)
-	# 	newPos = successorGameState.getPacmanPosition()
-	# 	newFood = successorGameState.getFood()
-	# 	initialScore = successorGameState.getScore()
-	# 	foodDists = []
-	# 	coefficient = 0
-	# 	for foodot in newFood.asList():
-	# 		foodDists.append(manhattanDistance(newPos, foodot))
+	actionScores = []
+	currentPos = currentGameState.getPacmanPosition()
+	legalMoves = currentGameState.getLegalActions()
+	
+	for action in legalMoves:
+		successorGameState = currentGameState.generatePacmanSuccessor(action)
+		newPos = successorGameState.getPacmanPosition()
+		ghostsPos = successorGameState.getGhostPositions()
+		newFood = successorGameState.getFood()
+		initialScore = successorGameState.getScore()
 
-	# 	if len(foodDists) != 0:
-	# 		coefficient = 1/min(foodDists)
+		foodDists = []; ghostDists = []
+		coefficient1 = 0; coefficient2 = 0
 
-	# 	actionScores.append(initialScore + coefficient)
+		for foodot in newFood.asList():							
+			foodDists.append(manhattanDistance(newPos, foodot))
+		if len(foodDists) != 0:
+			coefficient1 = 1/min(foodDists)
 
-	# if actionScores:			
-	# 	return max(actionScores)
-	# else:
-	# 	return 0
+		for ghost in ghostsPos:
+			ghostDists.append(manhattanDistance(newPos, ghost))
+		if (len(ghostDists) != 0) and (max(ghostDists) != 0):
+			coefficient2 = 1/max(ghostDists)
+
+		
+		actionScores.append(initialScore + coefficient1 - coefficient2)
+
+	if actionScores:			
+		return max(actionScores)
+	else:
+		return currentGameState.getScore()
 
 	util.raiseNotDefined()
 
