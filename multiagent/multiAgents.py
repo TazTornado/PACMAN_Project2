@@ -389,11 +389,12 @@ def betterEvaluationFunction(currentGameState):
 	
 	The evaluation starts with the current gameState's score.
 	If there are any legal moves for Pacman, then their corresponding states are generated. 
-	For each of those new states, the function enhances its score using 3 factors:
+	For each of those new states, the function enhances its score using 4 factors:
 	1. distance to closest food dot (if any)
 	2. distance to closest poer capsule (if any)
 	3. distance to closest ghost
-	Factors 1 and 2 increase the score by their reverse value, whereas factor 3 decreases the score by its reverse.
+	4. whether pacman has the opportunity to grab a power pellet and eat a nearby ghost
+	Factors 1, 2 and 4 increase the score by their reverse value, whereas factor 3 decreases the score by its reverse.
 
 	The chosen score is the highest among the above.
 	"""
@@ -404,6 +405,7 @@ def betterEvaluationFunction(currentGameState):
 	currentPos = currentGameState.getPacmanPosition()
 
 	actionScores = []
+	# initscores = []
 	initialScore = currentGameState.getScore()
 
 	for newState in successorGameStates:
@@ -415,11 +417,12 @@ def betterEvaluationFunction(currentGameState):
 		newFood = newState.getFood()
 		initialScore = newState.getScore()
 		capsulesLeft = newState.getCapsules()
-
+		
 		# calculate the factors that affect the score #
 		# ------------------------------------------- #
 		foodDists = []; ghostDists = []; capsuleDists = []		# distances from which the minimum is chosen
 		foodFactor = 0; ghostFactor = 0; capsuleFactor = 0		# initialize factors
+		chaseGhost = 0
 
 
 		for foodot in newFood.asList():							# food factor	
@@ -437,10 +440,14 @@ def betterEvaluationFunction(currentGameState):
 		if len(capsuleDists) != 0:
 			capsuleFactor = 1/min(capsuleDists)
 
+		if ghostDists and capsuleDists:							# opportunity to chase ghost				
+			if min(ghostDists) <= 4 and min(capsuleDists) <= 3:
+				chaseGhost = 1/(min(ghostDists) + min(capsuleDists))
+
 		# evaluate the new state
-		actionScores.append(initialScore + foodFactor + capsuleFactor - ghostFactor)
+		actionScores.append(initialScore + foodFactor + capsuleFactor - ghostFactor + chaseGhost)
 
-
+	
 	# if there are no legal actions to evaluate, return currentGameState's score # 
 	if actionScores:			
 		return max(actionScores)
